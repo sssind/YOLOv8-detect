@@ -12,7 +12,6 @@ import torch.nn as nn
 
 from ultralytics.nn.autobackend import check_class_names
 from ultralytics.nn.modules import (
-    CoordinateAttention,
     AIFI,
     C1,
     C2,
@@ -1667,7 +1666,7 @@ def parse_model(d, ch, verbose=True):
                     args.extend((True, 1.2))
             if m is C2fCIB:
                 legacy = False
-        elif m in {'CoordinateAttention', 'CA'}:  # 识别CA模块
+        elif m in {"CoordinateAttention", "CA"}:  # 识别CA模块
             c1, c2 = ch[f], args[0]
             args = [c1, c2]  # 输入通道数c1来自ch[f]，输出通道数c2来自args[0]
         elif m is AIFI:
