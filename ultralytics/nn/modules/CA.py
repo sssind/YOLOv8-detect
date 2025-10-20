@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class CoordinateAttention(nn.Module):
     def __init__(self, in_channels, out_channels, reduction=32):
-        super(CoordinateAttention, self).__init__()
+        super().__init__()
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))  # 水平方向全局平均池化
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))  # 垂直方向全局平均池化
 
