@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
-from ultralytics.nn.modules import Conv, Bottleneck, CA
-from block import C2f
+
+from ultralytics.nn.modules import CA, Bottleneck, Conv
+
 
 # num1
 class C2f_CA(nn.Module):
-    """将CA注意力机制融合到C2f模块中"""
+    """将CA注意力机制融合到C2f模块中."""
 
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, ca_ratio=0.25, ca_position='output'):
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, ca_ratio=0.25, ca_position="output"):
         """
         Args:
             c1: 输入通道数
@@ -17,7 +18,7 @@ class C2f_CA(nn.Module):
             g: 分组卷积的组数
             e: 扩展比率
             ca_ratio: CA模块的通道缩减比率
-            ca_position: CA添加位置 - 'output', 'bottleneck', 'both'
+            ca_position: CA添加位置 - 'output', 'bottleneck', 'both'.
         """
         super().__init__()
         self.c = int(c2 * e)  # 隐藏层通道数
@@ -29,19 +30,16 @@ class C2f_CA(nn.Module):
         self.cv2 = Conv((2 + n) * self.c, c2, 1)
 
         # 根据位置策略初始化CA模块
-        if ca_position in ['bottleneck', 'both']:
+        if ca_position in ["bottleneck", "both"]:
             # 在Bottleneck中添加CA
             self.bottleneck_ca = CA(self.c, self.c, reduction=int(1 / ca_ratio))
 
-        if ca_position in ['output', 'both']:
+        if ca_position in ["output", "both"]:
             # 在最终输出添加CA
             self.output_ca = CA(c2, c2, reduction=int(1 / ca_ratio))
 
         # Bottleneck模块
-        self.m = nn.ModuleList(
-            Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)))
-            for _ in range(n)
-        )
+        self.m = nn.ModuleList(Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3))) for _ in range(n))
 
     def forward(self, x):
         # 第一部分：通过cv1并分割
@@ -53,7 +51,7 @@ class C2f_CA(nn.Module):
             bottleneck_output = m(y[-1])
 
             # 在Bottleneck后应用CA
-            if hasattr(self, 'bottleneck_ca'):
+            if hasattr(self, "bottleneck_ca"):
                 bottleneck_output = self.bottleneck_ca(bottleneck_output)
 
             y.append(bottleneck_output)
@@ -62,14 +60,15 @@ class C2f_CA(nn.Module):
         x = self.cv2(torch.cat(y, 1))
 
         # 在最终输出应用CA
-        if hasattr(self, 'output_ca'):
+        if hasattr(self, "output_ca"):
             x = self.output_ca(x)
 
         return x
 
+
 # num2
 class C2f_Asparagus_CA(nn.Module):
-    """针对成熟期芦笋优化的C2f_CA模块"""
+    """针对成熟期芦笋优化的C2f_CA模块."""
 
     def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5, vertical_enhance=True):
         super().__init__()
@@ -91,10 +90,7 @@ class C2f_Asparagus_CA(nn.Module):
         self.output_ca = AsparagusCA(c2, vertical_enhance=vertical_enhance)
 
         # Bottleneck模块
-        self.m = nn.ModuleList(
-            Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)))
-            for _ in range(n)
-        )
+        self.m = nn.ModuleList(Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3))) for _ in range(n))
 
         # 记录中间层位置
         self.mid_index = n // 2
@@ -127,7 +123,7 @@ class C2f_Asparagus_CA(nn.Module):
 
 
 class AsparagusCA(nn.Module):
-    """芦笋专用的CA注意力，增强垂直方向感知"""
+    """芦笋专用的CA注意力，增强垂直方向感知."""
 
     def __init__(self, channels, reduction=16, vertical_enhance=True):
         super().__init__()
@@ -153,14 +149,14 @@ class AsparagusCA(nn.Module):
                 nn.BatchNorm2d(channels // 4),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(channels // 4, channels, 1),
-                nn.Sigmoid()
+                nn.Sigmoid(),
             )
 
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         identity = x
-        batch_size, c, h, w = x.size()
+        _batch_size, _c, h, w = x.size()
 
         # 坐标注意力
         # 水平方向特征 [b, c, h, 1]

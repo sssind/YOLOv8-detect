@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class CoordinateAttention(nn.Module):
     def __init__(self, in_channels, out_channels, reduction=32):
-        super(CoordinateAttention, self).__init__()
+        super().__init__()
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))  # 水平方向全局平均池化
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))  # 垂直方向全局平均池化
 
@@ -21,7 +21,7 @@ class CoordinateAttention(nn.Module):
 
     def forward(self, x):
         identity = x  # 保留原始输入，用于后续的shortcut连接
-        n, c, h, w = x.size()
+        _n, _c, h, w = x.size()
 
         # 水平方向全局平均池化, 形状从 [B, C, H, W] 变为 [B, C, H, 1]
         x_h = self.pool_h(x)
